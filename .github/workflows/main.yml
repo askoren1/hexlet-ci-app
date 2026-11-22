@@ -46,7 +46,7 @@ jobs:
         run: |
           response=$(curl --fail --silent --show-error http://127.0.0.1:3000/)
           echo "$response"
-          test "$response" = "ready"
+          test "$response" = "wrong"
 
       - name: Stop server
         cancel: server
