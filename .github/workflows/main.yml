@@ -24,5 +24,32 @@ jobs:
       - name: Wait for remaining work
         wait-all:
 
+  server-demo:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: jdx/mise-action@v5.2.10
+
+      - name: Start server
+        id: server
+        background: true
+        run: mise run serve-demo
+
+      - name: Wait for readiness
+        run: >-
+          curl --fail --silent --show-error --output /dev/null
+          --retry 60 --retry-connrefused --retry-delay 1
+          --max-time 2 --retry-max-time 120
+          http://127.0.0.1:3000/
+
+      - name: Check response
+        run: |
+          response=$(curl --fail --silent --show-error http://127.0.0.1:3000/)
+          echo "$response"
+          test "$response" = "ready"
+
+      - name: Stop server
+        cancel: server
+
 
 
