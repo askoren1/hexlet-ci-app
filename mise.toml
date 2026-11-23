@@ -7,7 +7,7 @@ betterleaks = "latest"
 hk = "2"
 jactionlint = "latest"
 lychee = "latest"
-node = "26"
+node = "22"
 "npm:@commitlint/cli" = "latest"
 "npm:@commitlint/config-conventional" = "latest"
 osv-scanner = "latest"
@@ -44,3 +44,6 @@ run = "hk check --all"
 [tasks.fix]
 description = "Применить автоисправления"
 run = "hk fix --all"
+
+[tasks.serve-demo]
+run = "node demo-server.js"

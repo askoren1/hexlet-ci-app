@@ -5,7 +5,10 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-    
+
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-26.04
@@ -29,3 +32,18 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - run: echo "All checks passed"
+
+  access-demo:
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Read repository information
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api "repos/$GITHUB_REPOSITORY" --jq .full_name
+
+      - name: Show pull request title
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$PR_TITLE"
+
