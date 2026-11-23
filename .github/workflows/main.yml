@@ -1,55 +1,64 @@
 name: CI
-on: 
+on:
   push:
-    branches: [main]
+    branches: [main, ci-expressions]
   pull_request:
     branches: [main]
   workflow_dispatch:
+
+env:
+  CHECK_LABEL: training
     
 jobs:
-  parallel-demo:
+  lint:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: jdx/mise-action@v5.2.10
       - run: mise run setup
-      - name: Test
-        id: tests
-        background: true  
-        run: mise run test
-      - name: Lint
-        run: mise run lint
-      - name: Wait for tests
-        wait: tests
-      - name: Wait for remaining work
-        wait-all:
+      - run: mise run lint
 
-  server-demo:
+  test:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: jdx/mise-action@v5.2.10
-
-      - name: Start server
-        id: server
-        background: true
-        run: mise run serve-demo
-
-      - name: Wait for readiness
-        run: >-
-          curl --fail --silent --show-error --output /dev/null
-          --retry 60 --retry-connrefused --retry-delay 1
-          --max-time 2 --retry-max-time 120
-          http://127.0.0.1:3000/
-
-      - name: Check response
+      - run: mise run setup   
+      - name: Workflow values
         run: |
-          response=$(curl --fail --silent --show-error http://127.0.0.1:3000/)
-          echo "$response"
-          test "$response" = "ready"
+          echo "CHECK_LABEL=$CHECK_LABEL"
+          echo "GITHUB_WORKFLOW=$GITHUB_WORKFLOW"
+          echo "event=$GITHUB_EVENT_NAME"
 
-      - name: Stop server
-        cancel: server
+      - name: Step value
+        env:
+          CHECK_LABEL: local-step
+        run: echo "CHECK_LABEL=$CHECK_LABEL"
 
+      - name: Workflow value again
+        run: echo "CHECK_LABEL=$CHECK_LABEL"
+
+      - name: Repository value
+        env:
+          CI_LABEL: ${{ vars.CI_LABEL || 'training' }}
+        run: echo "CI_LABEL=$CI_LABEL"
+
+      - name: Manual only
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: echo "Started manually"
+
+      - name: Run tests
+        run: mise run test
+
+      - name: Explain failure
+        if: ${{ failure() }}
+        run: echo 'Open the first failed step in this job.'
+
+  verify:
+    name: CI result
+    needs: [lint, test]
+    runs-on: ubuntu-26.04
+    steps:
+      - run: echo "All checks passed"
 
 
