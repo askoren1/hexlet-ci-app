@@ -47,10 +47,3 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: printf '%s\n' "$PR_TITLE"
 
-      - name: Check training secret
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        env:
-          TRAINING_SECRET: ${{ secrets.TRAINING_SECRET }}
-        run: |
-          test -n "$TRAINING_SECRET"
-          echo 'Training secret is available'
